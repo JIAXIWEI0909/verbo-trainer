@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>西语动词变位练习 - A1/A2</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 30px auto;
+      background: #f7f9fc;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      color: #2c3e50;
+    }
+    select, input, button {
+      font-size: 16px;
+      padding: 8px;
+      margin: 10px 0;
+      width: 90%;
+      max-width: 400px;
+      box-sizing: border-box;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      margin-top: 20px;
+    }
+    .feedback {
+      margin-top: 15px;
+      font-weight: bold;
+      min-height: 1.5em;
+    }
+    #meaning {
+      color: #555;
+      font-size: 14px;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>西语动词变位练习 (A1-A2)</h1>
+
+  <label for="tense">选择时态：</label><br />
+  <select id="tense">
+    <option value="presente">现在时 (Presente)</option>
+    <option value="indefinido">简单过去时 (Pretérito indefinido)</option>
+    <option value="imperfecto">过去未完成时 (Pretérito imperfecto)</option>
+  </select>
+
+  <div class="card">
+    <div id="question" style="font-size: 22px; margin-bottom: 6px;"></div>
+    <div id="meaning"></div>
+    <input type="text" id="answer" placeholder="请输入正确变位" autocomplete="off" />
+    <button onclick="checkAnswer()">提交答案</button>
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <script>
+    const pronombres = ["yo", "tú", "él/ella/usted", "nosotros/as", "vosotros/as", "ellos/ellas/ustedes"];
+
+    const verbos = {
+  "ser": {
+    "meaning": "是（本质）",
+    "presente": ["soy", "eres", "es", "somos", "sois", "son"],
+    "indefinido": ["fui", "fuiste", "fue", "fuimos", "fuisteis", "fueron"],
+    "imperfecto": ["era", "eras", "era", "éramos", "erais", "eran"]
+  },
+  "estar": {
+    "meaning": "在（状态）",
+    "presente": ["estoy", "estás", "está", "estamos", "estáis", "están"],
+    "indefinido": ["estuve", "estuviste", "estuvo", "estuvimos", "estuvisteis", "estuvieron"],
+    "imperfecto": ["estaba", "estabas", "estaba", "estábamos", "estabais", "estaban"]
+  },
+  "tener": {
+    "meaning": "有",
+    "presente": ["tengo", "tienes", "tiene", "tenemos", "tenéis", "tienen"],
+    "indefinido": ["tuve", "tuviste", "tuvo", "tuvimos", "tuvisteis", "tuvieron"],
+    "imperfecto": ["tenía", "tenías", "tenía", "teníamos", "teníais", "tenían"]
+  },
+  "llevar": {
+    "meaning": "穿，带",
+    "presente": ["llevo", "llevas", "lleva", "llevamos", "lleváis", "llevan"],
+    "indefinido": ["llevé", "llevaste", "llevó", "llevamos", "llevasteis", "llevaron"],
+    "imperfecto": ["llevaba", "llevabas", "llevaba", "llevábamos", "llevabais", "llevaban"]
+  },
+  "lavar": {
+    "meaning": "洗",
+    "presente": ["lavo", "lavas", "lava", "lavamos", "laváis", "lavan"],
+    "indefinido": ["lavé", "lavaste", "lavó", "lavamos", "lavasteis", "lavaron"],
+    "imperfecto": ["lavaba", "lavabas", "lavaba", "lavábamos", "lavabais", "lavaban"]
+  },
+  "peinar": {
+    "meaning": "梳理头发",
+    "presente": ["peino", "peinas", "peina", "peinamos", "peináis", "peinan"],
+    "indefinido": ["peiné", "peinaste", "peinó", "peinamos", "peinasteis", "peinaron"],
+    "imperfecto": ["peinaba", "peinabas", "peinaba", "peinábamos", "peinabais", "peinaban"]
+  },
+  "afeitar": {
+    "meaning": "刮胡子",
+    "presente": ["afeito", "afeitas", "afeita", "afeitamos", "afeitáis", "afeitan"],
+    "indefinido": ["afeité", "afeitaste", "afeitó", "afeitamos", "afeitasteis", "afeitaron"],
+    "imperfecto": ["afeitaba", "afeitabas", "afeitaba", "afeitábamos", "afeitabais", "afeitaban"]
+  },
+  "andar": {
+    "meaning": "走，行走",
+    "presente": ["ando", "andas", "anda", "andamos", "andáis", "andan"],
+    "indefinido": ["anduve", "anduviste", "anduvo", "anduvimos", "anduvisteis", "anduvieron"],
+    "imperfecto": ["andaba", "andabas", "andaba", "andábamos", "andabais", "andaban"]
+  },
+  "pasear": {
+    "meaning": "散步",
+    "presente": ["paseo", "paseas", "pasea", "paseamos", "paseáis", "pasean"],
+    "indefinido": ["paseé", "paseaste", "paseó", "paseamos", "paseasteis", "pasearon"],
+    "imperfecto": ["paseaba", "paseabas", "paseaba", "paseábamos", "paseabais", "paseaban"]
+  },
+  "correr": {
+    "meaning": "跑",
+    "presente": ["corro", "corres", "corre", "corremos", "corréis", "corren"],
+    "indefinido": ["corrí", "corriste", "corrió", "corrimos", "corristeis", "corrieron"],
+    "imperfecto": ["corría", "corrías", "corría", "corríamos", "corríais", "corrían"]
+  },
+  "subir": {
+    "meaning": "上升，上去",
+    "presente": ["subo", "subes", "sube", "subimos", "subís", "suben"],
+    "indefinido": ["subí", "subiste", "subió", "subimos", "subisteis", "subieron"],
+    "imperfecto": ["subía", "subías", "subía", "subíamos", "subíais", "subían"]
+  },
+  "bajar": {
+    "meaning": "下降，下去",
+    "presente": ["bajo", "bajas", "baja", "bajamos", "bajáis", "bajan"],
+    "indefinido": ["bajé", "bajaste", "bajó", "bajamos", "bajasteis", "bajaron"],
+    "imperfecto": ["bajaba", "bajabas", "bajaba", "bajábamos", "bajabais", "bajaban"]
+  },
+  "sentar": {
+    "meaning": "坐",
+    "presente": ["siento", "sientas", "sienta", "sentamos", "sentáis", "sientan"],
+    "indefinido": ["senté", "sentaste", "sentó", "sentamos", "sentasteis", "sentaron"],
+    "imperfecto": ["sentaba", "sentabas", "sentaba", "sentábamos", "sentabais", "sentaban"]
+  },
+  "escuchar": {
+    "meaning": "听",
+    "presente": ["escucho", "escuchas", "escucha", "escuchamos", "escucháis", "escuchan"],
+    "indefinido": ["escuché", "escuchaste", "escuchó", "escuchamos", "escuchasteis", "escucharon"],
+    "imperfecto": ["escuchaba", "escuchabas", "escuchaba", "escuchábamos", "escuchabais", "escuchaban"]
+  },
+  "duchar": {
+    "meaning": "洗澡",
+    "presente": ["ducho", "duchas", "ducha", "duchamos", "ducháis", "duchan"],
+    "indefinido": ["duché", "duchaste", "duchó", "duchamos", "duchasteis", "ducharon"],
+    "imperfecto": ["duchaba", "duchabas", "duchaba", "duchábamos", "duchabais", "duchaban"]
+  },
+  "ver": {
+    "meaning": "看见",
+    "presente": ["veo", "ves", "ve", "vemos", "veis", "ven"],
+    "indefinido": ["vi", "viste", "vio", "vimos", "visteis", "vieron"],
+    "imperfecto": ["veía", "veías", "veía", "veíamos", "veíais", "veían"]
+  },
+  "oír": {
+    "meaning": "听见",
+    "presente": ["oigo", "oyes", "oye", "oímos", "oís", "oyen"],
+    "indefinido": ["oí", "oíste", "oyó", "oímos", "oísteis", "oyeron"],
+    "imperfecto": ["oía", "oías", "oía", "oíamos", "oíais", "oían"]
+  },
+  "coger": {
+    "meaning": "抓，拿",
+    "presente": ["cojo", "coges", "coge", "cogemos", "cogéis", "cogen"],
+    "indefinido": ["cogí", "cogiste", "cogió", "cogimos", "cogisteis", "cogieron"],
+    "imperfecto": ["cogía", "cogías", "cogía", "cogíamos", "cogíais", "cogían"]
+  },
+  "hacer": {
+    "meaning": "做",
+    "presente": ["hago", "haces", "hace", "hacemos", "hacéis", "hacen"],
+    "indefinido": ["hice", "hiciste", "hizo", "hicimos", "hicisteis", "hicieron"],
+    "imperfecto": ["hacía", "hacías", "hacía", "hacíamos", "hacíais", "hacían"]
+  },
+  "nacer": {
+    "meaning": "出生",
+    "presente": ["nazco", "naces", "nace", "nacemos", "nacéis", "nacen"],
+    "indefinido": ["nací", "naciste", "nació", "nacimos", "nacisteis", "nacieron"],
+    "imperfecto": ["nacía", "nacías", "nacía", "nacíamos", "nacíais", "nacían"]
+  },
+  "crecer": {
+    "meaning": "成长",
+    "presente": ["crezco", "creces", "crece", "crecemos", "crecéis", "crecen"],
+    "indefinido": ["crecí", "creciste", "creció", "crecimos", "crecisteis", "crecieron"],
+    "imperfecto": ["crecía", "crecías", "crecía", "crecíamos", "crecíais", "crecían"]
+  },
+  "morir": {
+    "meaning": "死",
+    "presente": ["muero", "mueres", "muere", "morimos", "morís", "mueren"],
+    "indefinido": ["morí", "moriste", "murió", "morimos", "moristeis", "murieron"],
+    "imperfecto": ["moría", "morías", "moría", "moríamos", "moríais", "morían"]
+  },
+  "gustar": {
+    "meaning": "喜欢",
+    "presente": ["gusto", "gustas", "gusta", "gustamos", "gustáis", "gustan"],
+    "indefinido": ["gusté", "gustaste", "gustó", "gustamos", "gustasteis", "gustaron"],
+    "imperfecto": ["gustaba", "gustabas", "gustaba", "gustábamos", "gustabais", "gustaban"]
+  },
+  "encantar": {
+    "meaning": "非常喜欢",
+    "presente": ["encanto", "encantas", "encanta", "encantamos", "encantáis", "encantan"],
+    "indefinido": ["encanté", "encantaste", "encantó", "encantamos", "encantasteis", "encantaron"],
+    "imperfecto": ["encantaba", "encantabas", "encantaba", "encantábamos", "encantabais", "encantaban"]
+  },
+  "odiar": {
+    "meaning": "讨厌",
+    "presente": ["odio", "odias", "odia", "odiamos", "odiáis", "odian"],
+    "indefinido": ["odié", "odiaste", "odió", "odiamos", "odiasteis", "odiaron"],
+    "imperfecto": ["odiaba", "odiabas", "odiaba", "odiábamos", "odiabais", "odiaban"]
+  },
+  "presentar": {
+    "meaning": "介绍",
+    "presente": ["presento", "presentas", "presenta", "presentamos", "presentáis", "presentan"],
+    "indefinido": ["presenté", "presentaste", "presentó", "presentamos", "presentasteis", "presentaron"],
+    "imperfecto": ["presentaba", "presentabas", "presentaba", "presentábamos", "presentabais", "presentaban"]
+  },
+  "apellidar": {
+    "meaning": "姓",
+    "presente": ["apellido", "apellidas", "apellida", "apellidamos", "apellidáis", "apellidan"],
+    "indefinido": ["apellidé", "apellidaste", "apellidó", "apellidamos", "apellidasteis", "apellidaron"],
+    "imperfecto": ["apellidaba", "apellidabas", "apellidaba", "apellidábamos", "apellidabais", "apellidaban"]
+  },
+  "firmar": {
+    "meaning": "签名",
+    "presente": ["firmo", "firmas", "firma", "firmamos", "firmáis", "firman"],
+    "indefinido": ["firmé", "firmaste", "firmó", "firmamos", "firmasteis", "firmaron"],
+    "imperfecto": ["firmaba", "firmabas", "firmaba", "firmábamos", "firmabais", "firmaban"]
+  },
+  "cocinar": {
+    "meaning": "做饭",
+    "presente": ["cocino", "cocinas", "cocina", "cocinamos", "cocináis", "cocinan"],
+    "indefinido": ["cociné", "cocinaste", "cocinó", "cocinamos", "cocinasteis", "cocinaron"],
+    "imperfecto": ["cocinaba", "cocinabas", "cocinaba", "cocinábamos", "cocinabais", "cocinaban"]
+  },
+  "comprar": {
+    "meaning": "买",
+    "presente": ["compro", "compras", "compra", "compramos", "compráis", "compran"],
+    "indefinido": ["compré", "compraste", "compró", "compramos", "comprasteis", "compraron"],
+    "imperfecto": ["compraba", "comprabas", "compraba", "comprábamos", "comprabais", "compraban"]
+  },
+  "pagar": {
+    "meaning": "付钱",
+    "presente": ["pago", "pagas", "paga", "pagamos", "pagáis", "pagan"],
+    "indefinido": ["pagué", "pagaste", "pagó", "pagamos", "pagasteis", "pagaron"],
+    "imperfecto": ["pagaba", "pagabas", "pagaba", "pagábamos", "pagabais", "pagaban"]
+  },
+  "bailar": {
+    "meaning": "跳舞",
+    "presente": ["bailo", "bailas", "baila", "bailamos", "bailáis", "bailan"],
+    "indefinido": ["bailé", "bailaste", "bailó", "bailamos", "bailasteis", "bailaron"],
+    "imperfecto": ["bailaba", "bailabas", "bailaba", "bailábamos", "bailabais", "bailaban"]
+  },
+  "cantar": {
+    "meaning": "唱歌",
+    "presente": ["canto", "cantas", "canta", "cantamos", "cantáis", "cantan"],
+    "indefinido": ["canté", "cantaste", "cantó", "cantamos", "cantasteis", "cantaron"],
+    "imperfecto": ["cantaba", "cantabas", "cantaba", "cantábamos", "cantabais", "cantaban"]
+  },
+  "correr": {
+    "meaning": "跑",
+    "presente": ["corro", "corres", "corre", "corremos", "corréis", "corren"],
+    "indefinido": ["corrí", "corriste", "corrió", "corrimos", "corristeis", "corrieron"],
+    "imperfecto": ["corría", "corrías", "corría", "corríamos", "corríais", "corrían"]
+  },
+  "leer": {
+    "meaning": "读",
+    "presente": ["leo", "lees", "lee", "leemos", "leéis", "leen"],
+    "indefinido": ["leí", "leíste", "leyó", "leímos", "leísteis", "leyeron"],
+    "imperfecto": ["leía", "leías", "leía", "leíamos", "leíais", "leían"]
+  },
+  "escribir": {
+    "meaning": "写",
+    "presente": ["escribo", "escribes", "escribe", "escribimos", "escribís", "escriben"],
+    "indefinido": ["escribí", "escribiste", "escribió", "escribimos", "escribisteis", "escribieron"],
+    "imperfecto": ["escribía", "escribías", "escribía", "escribíamos", "escribíais", "escribían"]
+  },
+  "abrir": {
+    "meaning": "打开",
+    "presente": ["abro", "abres", "abre", "abrimos", "abrís", "abren"],
+    "indefinido": ["abrí", "abriste", "abrió", "abrimos", "abristeis", "abrieron"],
+    "imperfecto": ["abría", "abrías", "abría", "abríamos", "abríais", "abrían"]
+  },
+  "cerrar": {
+    "meaning": "关闭",
+    "presente": ["cierro", "cierras", "cierra", "cerramos", "cerráis", "cierran"],
+    "indefinido": ["cerré", "cerraste", "cerró", "cerramos", "cerrasteis", "cerraron"],
+    "imperfecto": ["cerraba", "cerrabas", "cerraba", "cerrábamos", "cerrabais", "cerraban"]
+  },
+  "entrar": {
+    "meaning": "进入",
+    "presente": ["entro", "entras", "entra", "entramos", "entráis", "entran"],
+    "indefinido": ["entré", "entraste", "entró", "entramos", "entrasteis", "entraron"],
+    "imperfecto": ["entraba", "entrabas", "entraba", "entrábamos", "entrabais", "entraban"]
+  },
+  "salir": {
+    "meaning": "出去",
+    "presente": ["salgo", "sales", "sale", "salimos", "salís", "salen"],
+    "indefinido": ["salí", "saliste", "salió", "salimos", "salisteis", "salieron"],
+    "imperfecto": ["salía", "salías", "salía", "salíamos", "salíais", "salían"]
+  },
+  "viajar": {
+    "meaning": "旅行",
+    "presente": ["viajo", "viajas", "viaja", "viajamos", "viajáis", "viajan"],
+    "indefinido": ["viajé", "viajaste", "viajó", "viajamos", "viajasteis", "viajaron"],
+    "imperfecto": ["viajaba", "viajabas", "viajaba", "viajábamos", "viajabais", "viajaban"]
+  },
+  "descansar": {
+    "meaning": "休息",
+    "presente": ["descanso", "descansas", "descansa", "descansamos", "descansáis", "descansan"],
+    "indefinido": ["descansé", "descansaste", "descansó", "descansamos", "descansasteis", "descansaron"],
+    "imperfecto": ["descansaba", "descansabas", "descansaba", "descansábamos", "descansabais", "descansaban"]
+  },
+  "trabajar": {
+    "meaning": "工作",
+    "presente": ["trabajo", "trabajas", "trabaja", "trabajamos", "trabajáis", "trabajan"],
+    "indefinido": ["trabajé", "trabajaste", "trabajó", "trabajamos", "trabajasteis", "trabajaron"],
+    "imperfecto": ["trabajaba", "trabajabas", "trabajaba", "trabajábamos", "trabajabais", "trabajaban"]
+  },
+  "ayudar": {
+    "meaning": "帮助",
+    "presente": ["ayudo", "ayudas", "ayuda", "ayudamos", "ayudáis", "ayudan"],
+    "indefinido": ["ayudé", "ayudaste", "ayudó", "ayudamos", "ayudasteis", "ayudaron"],
+    "imperfecto": ["ayudaba", "ayudabas", "ayudaba", "ayudábamos", "ayudabais", "ayudaban"]
+  },
+  "cambiar": {
+    "meaning": "改变",
+    "presente": ["cambio", "cambias", "cambia", "cambiamos", "cambiáis", "cambian"],
+    "indefinido": ["cambié", "cambiaste", "cambió", "cambiamos", "cambiasteis", "cambiaron"],
+    "imperfecto": ["cambiaba", "cambiabas", "cambiaba", "cambiábamos", "cambiabais", "cambiaban"]
+  },
+  "buscar": {
+    "meaning": "找",
+    "presente": ["busco", "buscas", "busca", "buscamos", "buscáis", "buscan"],
+    "indefinido": ["busqué", "buscaste", "buscó", "buscamos", "buscasteis", "buscaron"],
+    "imperfecto": ["buscaba", "buscabas", "buscaba", "buscábamos", "buscabais", "buscaban"]
+  },
+  "coger": {
+    "meaning": "抓，拿",
+    "presente": ["cojo", "coges", "coge", "cogemos", "cogéis", "cogen"],
+    "indefinido": ["cogí", "cogiste", "cogió", "cogimos", "cogisteis", "cogieron"],
+    "imperfecto": ["cogía", "cogías", "cogía", "cogíamos", "cogíais", "cogían"]
+  },
+  "poner": {
+    "meaning": "放",
+    "presente": ["pongo", "pones", "pone", "ponemos", "ponéis", "ponen"],
+    "indefinido": ["puse", "pusiste", "puso", "pusimos", "pusisteis", "pusieron"],
+    "imperfecto": ["ponía", "ponías", "ponía", "poníamos", "poníais", "ponían"]
+  },
+  "quedar": {
+    "meaning": "留下，约定",
+    "presente": ["quedo", "quedas", "queda", "quedamos", "quedáis", "quedan"],
+    "indefinido": ["quedé", "quedaste", "quedó", "quedamos", "quedasteis", "quedaron"],
+    "imperfecto": ["quedaba", "quedabas", "quedaba", "quedábamos", "quedabais", "quedaban"]
+  },
+  "sentir": {
+    "meaning": "感觉",
+    "presente": ["siento", "sientes", "siente", "sentimos", "sentís", "sienten"],
+    "indefinido": ["sentí", "sentiste", "sintió", "sentimos", "sentisteis", "sintieron"],
+    "imperfecto": ["sentía", "sentías", "sentía", "sentíamos", "sentíais", "sentían"]
+  },
+  "volver": {
+    "meaning": "返回",
+    "presente": ["vuelvo", "vuelves", "vuelve", "volvemos", "volvéis", "vuelven"],
+    "indefinido": ["volví", "volviste", "volvió", "volvimos", "volvisteis", "volvieron"],
+    "imperfecto": ["volvía", "volvías", "volvía", "volvíamos", "volvíais", "volvían"]
+  },
+  "vivir": {
+    "meaning": "生活，居住",
+    "presente": ["vivo", "vives", "vive", "vivimos", "vivís", "viven"],
+    "indefinido": ["viví", "viviste", "vivió", "vivimos", "vivisteis", "vivieron"],
+    "imperfecto": ["vivía", "vivías", "vivía", "vivíamos", "vivíais", "vivían"]
+  },
+  "abrir": {
+    "meaning": "打开",
+    "presente": ["abro", "abres", "abre", "abrimos", "abrís", "abren"],
+    "indefinido": ["abrí", "abriste", "abrió", "abrimos", "abristeis", "abrieron"],
+    "imperfecto": ["abría", "abrías", "abría", "abríamos", "abríais", "abrían"]
+  },
+  "cerrar": {
+    "meaning": "关闭",
+    "presente": ["cierro", "cierras", "cierra", "cerramos", "cerráis", "cierran"],
+    "indefinido": ["cerré", "cerraste", "cerró", "cerramos", "cerrasteis", "cerraron"],
+    "imperfecto": ["cerraba", "cerrabas", "cerraba", "cerrábamos", "cerrabais", "cerraban"]
+  },
+  "leer": {
+    "meaning": "读",
+    "presente": ["leo", "lees", "lee", "leemos", "leéis", "leen"],
+    "indefinido": ["leí", "leíste", "leyó", "leímos", "leísteis", "leyeron"],
+    "imperfecto": ["leía", "leías", "leía", "leíamos", "leíais", "leían"]
+  },
+  "escribir": {
+    "meaning": "写",
+    "presente": ["escribo", "escribes", "escribe", "escribimos", "escribís", "escriben"],
+    "indefinido": ["escribí", "escribiste", "escribió", "escribimos", "escribisteis", "escribieron"],
+    "imperfecto": ["escribía", "escribías", "escribía", "escribíamos", "escribíais", "escribían"]
+  },
+  "hacer": {
+    "meaning": "做",
+    "presente": ["hago", "haces", "hace", "hacemos", "hacéis", "hacen"],
+    "indefinido": ["hice", "hiciste", "hizo", "hicimos", "hicisteis", "hicieron"],
+    "imperfecto": ["hacía", "hacías", "hacía", "hacíamos", "hacíais", "hacían"]
+  },
+  "decir": {
+    "meaning": "说",
+    "presente": ["digo", "dices", "dice", "decimos", "decís", "dicen"],
+    "indefinido": ["dije", "dijiste", "dijo", "dijimos", "dijisteis", "dijeron"],
+    "imperfecto": ["decía", "decías", "decía", "decíamos", "decíais", "decían"]
+  },
+  "dar": {
+    "meaning": "给",
+    "presente": ["doy", "das", "da", "damos", "dais", "dan"],
+    "indefinido": ["di", "diste", "dio", "dimos", "disteis", "dieron"],
+    "imperfecto": ["daba", "dabas", "daba", "dábamos", "dabais", "daban"]
+  },
+  "ir": {
+    "meaning": "去",
+    "presente": ["voy", "vas", "va", "vamos", "vais", "van"],
+    "indefinido": ["fui", "fuiste", "fue", "fuimos", "fuisteis", "fueron"],
+    "imperfecto": ["iba", "ibas", "iba", "íbamos", "ibais", "iban"]
+  },
+  "venir": {
+    "meaning": "来",
+    "presente": ["vengo", "vienes", "viene", "venimos", "venís", "vienen"],
+    "indefinido": ["vine", "viniste", "vino", "vinimos", "vinisteis", "vinieron"],
+    "imperfecto": ["venía", "venías", "venía", "veníamos", "veníais", "venían"]
+  },
+  "ver": {
+    "meaning": "看见",
+    "presente": ["veo", "ves", "ve", "vemos", "veis", "ven"],
+    "indefinido": ["vi", "viste", "vio", "vimos", "visteis", "vieron"],
+    "imperfecto": ["veía", "veías", "veía", "veíamos", "veíais", "veían"]
+  },
+  "saber": {
+    "meaning": "知道",
+    "presente": ["sé", "sabes", "sabe", "sabemos", "sabéis", "saben"],
+    "indefinido": ["supe", "supiste", "supo", "supimos", "supisteis", "supieron"],
+    "imperfecto": ["sabía", "sabías", "sabía", "sabíamos", "sabíais", "sabían"]
+  },
+  "poner": {
+    "meaning": "放置",
+    "presente": ["pongo", "pones", "pone", "ponemos", "ponéis", "ponen"],
+    "indefinido": ["puse", "pusiste", "puso", "pusimos", "pusisteis", "pusieron"],
+    "imperfecto": ["ponía", "ponías", "ponía", "poníamos", "poníais", "ponían"]
+  },
+  "tener": {
+    "meaning": "有",
+    "presente": ["tengo", "tienes", "tiene", "tenemos", "tenéis", "tienen"],
+    "indefinido": ["tuve", "tuviste", "tuvo", "tuvimos", "tuvisteis", "tuvieron"],
+    "imperfecto": ["tenía", "tenías", "tenía", "teníamos", "teníais", "tenían"]
+  },
+  "hacer": {
+    "meaning": "做",
+    "presente": ["hago", "haces", "hace", "hacemos", "hacéis", "hacen"],
+    "indefinido": ["hice", "hiciste", "hizo", "hicimos", "hicisteis", "hicieron"],
+    "imperfecto": ["hacía", "hacías", "hacía", "hacíamos", "hacíais", "hacían"]
+  },
+  "querer": {
+    "meaning": "想要",
+    "presente": ["quiero", "quieres", "quiere", "queremos", "queréis", "quieren"],
+    "indefinido": ["quise", "quisiste", "quiso", "quisimos", "quisisteis", "quisieron"],
+    "imperfecto": ["quería", "querías", "quería", "queríamos", "queríais", "querían"]
+  },
+  "poder": {
+    "meaning": "能够",
+    "presente": ["puedo", "puedes", "puede", "podemos", "podéis", "pueden"],
+    "indefinido": ["pude", "pudiste", "pudo", "pudimos", "pudisteis", "pudieron"],
+    "imperfecto": ["podía", "podías", "podía", "podíamos", "podíais", "podían"]
+  },
+  "decir": {
+    "meaning": "说",
+    "presente": ["digo", "dices", "dice", "decimos", "decís", "dicen"],
+    "indefinido": ["dije", "dijiste", "dijo", "dijimos", "dijisteis", "dijeron"],
+    "imperfecto": ["decía", "decías", "decía", "decíamos", "decíais", "decían"]
+  },
+"abrir": {
+  "meaning": "打开",
+  "presente": ["abro", "abres", "abre", "abrimos", "abrís", "abren"],
+  "indefinido": ["abrí", "abriste", "abrió", "abrimos", "abristeis", "abrieron"],
+  "imperfecto": ["abría", "abrías", "abría", "abríamos", "abríais", "abrían"]
+},
+"andar": {
+  "meaning": "走，行走",
+  "presente": ["ando", "andas", "anda", "andamos", "andáis", "andan"],
+  "indefinido": ["anduve", "anduviste", "anduvo", "anduvimos", "anduvisteis", "anduvieron"],
+  "imperfecto": ["andaba", "andabas", "andaba", "andábamos", "andabais", "andaban"]
+},
+"ayudar": {
+  "meaning": "帮助",
+  "presente": ["ayudo", "ayudas", "ayuda", "ayudamos", "ayudáis", "ayudan"],
+  "indefinido": ["ayudé", "ayudaste", "ayudó", "ayudamos", "ayudasteis", "ayudaron"],
+  "imperfecto": ["ayudaba", "ayudabas", "ayudaba", "ayudábamos", "ayudabais", "ayudaban"]
+},
+"bailar": {
+  "meaning": "跳舞",
+  "presente": ["bailo", "bailas", "baila", "bailamos", "bailáis", "bailan"],
+  "indefinido": ["bailé", "bailaste", "bailó", "bailamos", "bailasteis", "bailaron"],
+  "imperfecto": ["bailaba", "bailabas", "bailaba", "bailábamos", "bailabais", "bailaban"]
+},
+"buscar": {
+  "meaning": "找",
+  "presente": ["busco", "buscas", "busca", "buscamos", "buscáis", "buscan"],
+  "indefinido": ["busqué", "buscaste", "buscó", "buscamos", "buscasteis", "buscaron"],
+  "imperfecto": ["buscaba", "buscabas", "buscaba", "buscábamos", "buscabais", "buscaban"]
+},
+"cantar": {
+  "meaning": "唱歌",
+  "presente": ["canto", "cantas", "canta", "cantamos", "cantáis", "cantan"],
+  "indefinido": ["canté", "cantaste", "cantó", "cantamos", "cantasteis", "cantaron"],
+  "imperfecto": ["cantaba", "cantabas", "cantaba", "cantábamos", "cantabais", "cantaban"]
+},
+"cerrar": {
+  "meaning": "关闭",
+  "presente": ["cierro", "cierras", "cierra", "cerramos", "cerráis", "cierran"],
+  "indefinido": ["cerré", "cerraste", "cerró", "cerramos", "cerrasteis", "cerraron"],
+  "imperfecto": ["cerraba", "cerrabas", "cerraba", "cerrábamos", "cerrabais", "cerraban"]
+},
+"cocinar": {
+  "meaning": "做饭",
+  "presente": ["cocino", "cocinas", "cocina", "cocinamos", "cocináis", "cocinan"],
+  "indefinido": ["cociné", "cocinaste", "cocinó", "cocinamos", "cocinasteis", "cocinaron"],
+  "imperfecto": ["cocinaba", "cocinabas", "cocinaba", "cocinábamos", "cocinabais", "cocinaban"]
+},
+"comer": {
+  "meaning": "吃",
+  "presente": ["como", "comes", "come", "comemos", "coméis", "comen"],
+  "indefinido": ["comí", "comiste", "comió", "comimos", "comisteis", "comieron"],
+  "imperfecto": ["comía", "comías", "comía", "comíamos", "comíais", "comían"]
+},
+"comprar": {
+  "meaning": "买",
+  "presente": ["compro", "compras", "compra", "compramos", "compráis", "compran"],
+  "indefinido": ["compré", "compraste", "compró", "compramos", "comprasteis", "compraron"],
+  "imperfecto": ["compraba", "comprabas", "compraba", "comprábamos", "comprabais", "compraban"]
+},
+"comprender": {
+  "meaning": "理解",
+  "presente": ["comprendo", "comprendes", "comprende", "comprendemos", "comprendéis", "comprenden"],
+  "indefinido": ["comprendí", "comprendiste", "comprendió", "comprendimos", "comprendisteis", "comprendieron"],
+  "imperfecto": ["comprendía", "comprendías", "comprendía", "comprendíamos", "comprendíais", "comprendían"]
+},
+"conocer": {
+  "meaning": "认识",
+  "presente": ["conozco", "conoces", "conoce", "conocemos", "conocéis", "conocen"],
+  "indefinido": ["conocí", "conociste", "conoció", "conocimos", "conocisteis", "conocieron"],
+  "imperfecto": ["conocía", "conocías", "conocía", "conocíamos", "conocíais", "conocían"]
+},
+"correr": {
+  "meaning": "跑",
+  "presente": ["corro", "corres", "corre", "corremos", "corréis", "corren"],
+  "indefinido": ["corrí", "corriste", "corrió", "corrimos", "corristeis", "corrieron"],
+  "imperfecto": ["corría", "corrías", "corría", "corríamos", "corríais", "corrían"]
+},
+"creer": {
+  "meaning": "相信",
+  "presente": ["creo", "crees", "cree", "creemos", "creéis", "creen"],
+  "indefinido": ["creí", "creíste", "creyó", "creímos", "creísteis", "creyeron"],
+  "imperfecto": ["creía", "creías", "creía", "creíamos", "creíais", "creían"]
+},
+"dar": {
+  "meaning": "给",
+  "presente": ["doy", "das", "da", "damos", "dais", "dan"],
+  "indefinido": ["di", "diste", "dio", "dimos", "disteis", "dieron"],
+  "imperfecto": ["daba", "dabas", "daba", "dábamos", "dabais", "daban"]
+},
+"decir": {
+  "meaning": "说",
+  "presente": ["digo", "dices", "dice", "decimos", "decís", "dicen"],
+  "indefinido": ["dije", "dijiste", "dijo", "dijimos", "dijisteis", "dijeron"],
+  "imperfecto": ["decía", "decías", "decía", "decíamos", "decíais", "decían"]
+},
+"dejar": {
+  "meaning": "离开，放下",
+  "presente": ["dejo", "dejas", "deja", "dejamos", "dejáis", "dejan"],
+  "indefinido": ["dejé", "dejaste", "dejó", "dejamos", "dejasteis", "dejaron"],
+  "imperfecto": ["dejaba", "dejabas", "dejaba", "dejábamos", "dejabais", "dejaban"]
+},
+"desear": {
+  "meaning": "希望，想要",
+  "presente": ["deseo", "deseas", "desea", "deseamos", "deseáis", "desean"],
+  "indefinido": ["deseé", "deseaste", "deseó", "deseamos", "deseasteis", "desearon"],
+  "imperfecto": ["deseara", "desearas", "deseara", "deseáramos", "desearais", "desearan"]
+},
+"descansar": {
+  "meaning": "休息",
+  "presente": ["descanso", "descansas", "descansa", "descansamos", "descansáis", "descansan"],
+  "indefinido": ["descansé", "descansaste", "descansó", "descansamos", "descansasteis", "descansaron"],
+  "imperfecto": ["descansaba", "descansabas", "descansaba", "descansábamos", "descansabais", "descansaban"]
+},
+"despertar": {
+  "meaning": "醒来",
+  "presente": ["despierto", "despiertas", "despierta", "despertamos", "despertáis", "despiertan"],
+  "indefinido": ["desperté", "despertaste", "despertó", "despertamos", "despertasteis", "despertaron"],
+  "imperfecto": ["despertaba", "despertabas", "despertaba", "despertábamos", "despertabais", "despertaban"]
+},
+"entrar": {
+  "meaning": "进入",
+  "presente": ["entro", "entras", "entra", "entramos", "entráis", "entran"],
+  "indefinido": ["entré", "entraste", "entró", "entramos", "entrasteis", "entraron"],
+  "imperfecto": ["entraba", "entrabas", "entraba", "entrábamos", "entrabais", "entraban"]
+},
+"escuchar": {
+  "meaning": "听",
+  "presente": ["escucho", "escuchas", "escucha", "escuchamos", "escucháis", "escuchan"],
+  "indefinido": ["escuché", "escuchaste", "escuchó", "escuchamos", "escuchasteis", "escucharon"],
+  "imperfecto": ["escuchaba", "escuchabas", "escuchaba", "escuchábamos", "escuchabais", "escuchaban"]
+},
+"esperar": {
+  "meaning": "等待",
+  "presente": ["espero", "esperas", "espera", "esperamos", "esperáis", "esperan"],
+  "indefinido": ["esperé", "esperaste", "esperó", "esperamos", "esperasteis", "esperaron"],
+  "imperfecto": ["esperaba", "esperabas", "esperaba", "esperábamos", "esperabais", "esperaban"]
+},
+"estar": {
+  "meaning": "在（状态）",
+  "presente": ["estoy", "estás", "está", "estamos", "estáis", "están"],
+  "indefinido": ["estuve", "estuviste", "estuvo", "estuvimos", "estuvisteis", "estuvieron"],
+  "imperfecto": ["estaba", "estabas", "estaba", "estábamos", "estabais", "estaban"]
+},
+"estudiar": {
+  "meaning": "学习",
+  "presente": ["estudio", "estudias", "estudia", "estudiamos", "estudiáis", "estudian"],
+  "indefinido": ["estudié", "estudiaste", "estudió", "estudiamos", "estudiasteis", "estudiaron"],
+  "imperfecto": ["estudiaba", "estudiabas", "estudiaba", "estudiábamos", "estudiabais", "estudiaban"]
+},
+"explicar": {
+  "meaning": "解释",
+  "presente": ["explico", "explicas", "explica", "explicamos", "explicáis", "explican"],
+  "indefinido": ["expliqué", "explicaste", "explicó", "explicamos", "explicasteis", "explicaron"],
+  "imperfecto": ["explicaba", "explicabas", "explicaba", "explicábamos", "explicabais", "explicaban"]
+},
+"firmar": {
+  "meaning": "签名",
+  "presente": ["firmo", "firmas", "firma", "firmamos", "firmáis", "firman"],
+  "indefinido": ["firmé", "firmaste", "firmó", "firmamos", "firmasteis", "firmaron"],
+  "imperfecto": ["firmaba", "firmabas", "firmaba", "firmábamos", "firmabais", "firmaban"]
+},
+"ganar": {
+  "meaning": "赢得",
+  "presente": ["gano", "ganas", "gana", "ganamos", "ganáis", "ganan"],
+  "indefinido": ["gané", "ganaste", "ganó", "ganamos", "ganasteis", "ganaron"],
+  "imperfecto": ["ganaba", "ganabas", "ganaba", "ganábamos", "ganabais", "ganaban"]
+},
+"gustar": {
+  "meaning": "喜欢",
+  "presente": ["gusto", "gustas", "gusta", "gustamos", "gustáis", "gustan"],
+  "indefinido": ["gusté", "gustaste", "gustó", "gustamos", "gustasteis", "gustaron"],
+  "imperfecto": ["gustaba", "gustabas", "gustaba", "gustábamos", "gustabais", "gustaban"]
+},
+"haber": {
+  "meaning": "有（助动词）",
+  "presente": ["he", "has", "ha", "hemos", "habéis", "han"],
+  "indefinido": ["hube", "hubiste", "hubo", "hubimos", "hubisteis", "hubieron"],
+  "imperfecto": ["había", "habías", "había", "habíamos", "habíais", "habían"]
+},
+"hablar": {
+  "meaning": "说",
+  "presente": ["hablo", "hablas", "habla", "hablamos", "habláis", "hablan"],
+  "indefinido": ["hablé", "hablaste", "habló", "hablamos", "hablasteis", "hablaron"],
+  "imperfecto": ["hablaba", "hablabas", "hablaba", "hablábamos", "hablabais", "hablaban"]
+},
+"hacer": {
+  "meaning": "做",
+  "presente": ["hago", "haces", "hace", "hacemos", "hacéis", "hacen"],
+  "indefinido": ["hice", "hiciste", "hizo", "hicimos", "hicisteis", "hicieron"],
+  "imperfecto": ["hacía", "hacías", "hacía", "hacíamos", "hacíais", "hacían"]
+},
+"ir": {
+  "meaning": "去",
+  "presente": ["voy", "vas", "va", "vamos", "vais", "van"],
+  "indefinido": ["fui", "fuiste", "fue", "fuimos", "fuisteis", "fueron"],
+  "imperfecto": ["iba", "ibas", "iba", "íbamos", "ibais", "iban"]
+},
+"jugar": {
+  "meaning": "玩",
+  "presente": ["juego", "juegas", "juega", "jugamos", "jugáis", "juegan"],
+  "indefinido": ["jugué", "jugaste", "jugó", "jugamos", "jugasteis", "jugaron"],
+  "imperfecto": ["jugaba", "jugabas", "jugaba", "jugábamos", "jugabais", "jugaban"]
+},
+"leer": {
+  "meaning": "读",
+  "presente": ["leo", "lees", "lee", "leemos", "leéis", "leen"],
+  "indefinido": ["leí", "leíste", "leyó", "leímos", "leísteis", "leyeron"],
+  "imperfecto": ["leía", "leías", "leía", "leíamos", "leíais", "leían"]
+},
+"limpiar": {
+  "meaning": "打扫",
+  "presente": ["limpio", "limpias", "limpia", "limpiamos", "limpiáis", "limpian"],
+  "indefinido": ["limpié", "limpiaste", "limpió", "limpiamos", "limpiasteis", "limpiaron"],
+  "imperfecto": ["limpiaba", "limpiabas", "limpiaba", "limpiábamos", "limpiabais", "limpiaban"]
+},
+"llegar": {
+  "meaning": "到达",
+  "presente": ["llego", "llegas", "llega", "llegamos", "llegáis", "llegan"],
+  "indefinido": ["llegué", "llegaste", "llegó", "llegamos", "llegasteis", "llegaron"],
+  "imperfecto": ["llegaba", "llegabas", "llegaba", "llegábamos", "llegabais", "llegaban"]
+},
+"llevar": {
+  "meaning": "携带，穿着",
+  "presente": ["llevo", "llevas", "lleva", "llevamos", "lleváis", "llevan"],
+  "indefinido": ["llevé", "llevaste", "llevó", "llevamos", "llevasteis", "llevaron"],
+  "imperfecto": ["llevaba", "llevabas", "llevaba", "llevábamos", "llevabais", "llevaban"]
+},
+"mirar": {
+  "meaning": "看",
+  "presente": ["miro", "miras", "mira", "miramos", "miráis", "miran"],
+  "indefinido": ["miré", "miraste", "miró", "miramos", "mirasteis", "miraron"],
+  "imperfecto": ["miraba", "mirabas", "miraba", "mirábamos", "mirabais", "miraban"]
+},
+"morir": {
+  "meaning": "死",
+  "presente": ["muero", "mueres", "muere", "morimos", "morís", "mueren"],
+  "indefinido": ["morí", "moriste", "murió", "morimos", "moristeis", "murieron"],
+  "imperfecto": ["moría", "morías", "moría", "moríamos", "moríais", "morían"]
+},
+"mostrar": {
+  "meaning": "展示",
+  "presente": ["muestro", "muestras", "muestra", "mostramos", "mostráis", "muestran"],
+  "indefinido": ["mostré", "mostraste", "mostró", "mostramos", "mostrasteis", "mostraron"],
+  "imperfecto": ["mostraba", "mostrabas", "mostraba", "mostrábamos", "mostrabais", "mostraban"]
+},
+"nadar": {
+  "meaning": "游泳",
+  "presente": ["nado", "nadas", "nada", "nadamos", "nadáis", "nadan"],
+  "indefinido": ["nadé", "nadaste", "nadó", "nadamos", "nadasteis", "nadaron"],
+  "imperfecto": ["nadaba", "nadabas", "nadaba", "nadábamos", "nadabais", "nadaban"]
+},
+"necesitar": {
+  "meaning": "需要",
+  "presente": ["necesito", "necesitas", "necesita", "necesitamos", "necesitáis", "necesitan"],
+  "indefinido": ["necesité", "necesitaste", "necesitó", "necesitamos", "necesitasteis", "necesitaron"],
+  "imperfecto": ["necesitaba", "necesitabas", "necesitaba", "necesitábamos", "necesitabais", "necesitaban"]
+},
+"oler": {
+  "meaning": "闻",
+  "presente": ["huelo", "hueles", "huele", "olemos", "oléis", "huelen"],
+  "indefinido": ["olí", "oliste", "olió", "olimos", "olisteis", "olieron"],
+  "imperfecto": ["olía", "olías", "olía", "olíamos", "olíais", "olían"]
+},
+"pagar": {
+  "meaning": "付钱",
+  "presente": ["pago", "pagas", "paga", "pagamos", "pagáis", "pagan"],
+  "indefinido": ["pagué", "pagaste", "pagó", "pagamos", "pagasteis", "pagaron"],
+  "imperfecto": ["pagaba", "pagabas", "pagaba", "pagábamos", "pagabais", "pagaban"]
+},
+"parar": {
+  "meaning": "停止",
+  "presente": ["paro", "paras", "para", "paramos", "paráis", "paran"],
+  "indefinido": ["paré", "paraste", "paró", "paramos", "parasteis", "pararon"],
+  "imperfecto": ["paraba", "parabas", "paraba", "parábamos", "parabais", "paraban"]
+},
+"partir": {
+  "meaning": "离开，分开",
+  "presente": ["parto", "partes", "parte", "partimos", "partís", "parten"],
+  "indefinido": ["partí", "partiste", "partió", "partimos", "partisteis", "partieron"],
+  "imperfecto": ["partía", "partías", "partía", "partíamos", "partíais", "partían"]
+},
+"pasar": {
+  "meaning": "经过，发生",
+  "presente": ["paso", "pasas", "pasa", "pasamos", "pasáis", "pasan"],
+  "indefinido": ["pasé", "pasaste", "pasó", "pasamos", "pasasteis", "pasaron"],
+  "imperfecto": ["pasaba", "pasabas", "pasaba", "pasábamos", "pasabais", "pasaban"]
+},
+"pedir": {
+  "meaning": "请求，点菜",
+  "presente": ["pido", "pides", "pide", "pedimos", "pedís", "piden"],
+  "indefinido": ["pedí", "pediste", "pidió", "pedimos", "pedisteis", "pidieron"],
+  "imperfecto": ["pedía", "pedías", "pedía", "pedíamos", "pedíais", "pedían"]
+},
+"pensar": {
+  "meaning": "思考",
+  "presente": ["pienso", "piensas", "piensa", "pensamos", "pensáis", "piensan"],
+  "indefinido": ["pensé", "pensaste", "pensó", "pensamos", "pensasteis", "pensaron"],
+  "imperfecto": ["pensaba", "pensabas", "pensaba", "pensábamos", "pensabais", "pensaban"]
+},
+"perder": {
+  "meaning": "丢失，失去",
+  "presente": ["pierdo", "pierdes", "pierde", "perdemos", "perdéis", "pierden"],
+  "indefinido": ["perdí", "perdiste", "perdió", "perdimos", "perdisteis", "perdieron"],
+  "imperfecto": ["perdía", "perdías", "perdía", "perdíamos", "perdíais", "perdían"]
+},
+"permitir": {
+  "meaning": "允许",
+  "presente": ["permito", "permites", "permite", "permitimos", "permitís", "permiten"],
+  "indefinido": ["permití", "permitiste", "permitió", "permitimos", "permitisteis", "permitieron"],
+  "imperfecto": ["permitía", "permitías", "permitía", "permitíamos", "permitíais", "permitían"]
+},
+"poner": {
+  "meaning": "放置",
+  "presente": ["pongo", "pones", "pone", "ponemos", "ponéis", "ponen"],
+  "indefinido": ["puse", "pusiste", "puso", "pusimos", "pusisteis", "pusieron"],
+  "imperfecto": ["ponía", "ponías", "ponía", "poníamos", "poníais", "ponían"]
+},
+"preguntar": {
+  "meaning": "问",
+  "presente": ["pregunto", "preguntas", "pregunta", "preguntamos", "preguntáis", "preguntan"],
+  "indefinido": ["pregunté", "preguntaste", "preguntó", "preguntamos", "preguntasteis", "preguntaron"],
+  "imperfecto": ["preguntaba", "preguntabas", "preguntaba", "preguntábamos", "preguntabais", "preguntaban"]
+},
+"preparar": {
+  "meaning": "准备",
+  "presente": ["preparo", "preparas", "prepara", "preparamos", "preparáis", "preparan"],
+  "indefinido": ["preparé", "preparaste", "preparó", "preparamos", "preparasteis", "prepararon"],
+  "imperfecto": ["preparaba", "preparabas", "preparaba", "preparábamos", "preparabais", "preparaban"]
+},
+"probar": {
+  "meaning": "尝试，品尝",
+  "presente": ["pruebo", "pruebas", "prueba", "probamos", "probáis", "prueban"],
+  "indefinido": ["probé", "probaste", "probó", "probamos", "probasteis", "probaron"],
+  "imperfecto": ["probaba", "probabas", "probaba", "probábamos", "probabais", "probaban"]
+},
+"quedar": {
+  "meaning": "留下，约定",
+  "presente": ["quedo", "quedas", "queda", "quedamos", "quedáis", "quedan"],
+  "indefinido": ["quedé", "quedaste", "quedó", "quedamos", "quedasteis", "quedaron"],
+  "imperfecto": ["quedaba", "quedabas", "quedaba", "quedábamos", "quedabais", "quedaban"]
+},
+"querer": {
+  "meaning": "想，要",
+  "presente": ["quiero", "quieres", "quiere", "queremos", "queréis", "quieren"],
+  "indefinido": ["quise", "quisiste", "quiso", "quisimos", "quisisteis", "quisieron"],
+  "imperfecto": ["quería", "querías", "quería", "queríamos", "queríais", "querían"]
+},
+"recibir": {
+  "meaning": "收到",
+  "presente": ["recibo", "recibes", "recibe", "recibimos", "recibís", "reciben"],
+  "indefinido": ["recibí", "recibiste", "recibió", "recibimos", "recibisteis", "recibieron"],
+  "imperfecto": ["recibía", "recibías", "recibía", "recibíamos", "recibíais", "recibían"]
+},
+"recordar": {
+  "meaning": "记得",
+  "presente": ["recuerdo", "recuerdas", "recuerda", "recordamos", "recordáis", "recuerdan"],
+  "indefinido": ["recordé", "recordaste", "recordó", "recordamos", "recordasteis", "recordaron"],
+  "imperfecto": ["recordaba", "recordabas", "recordaba", "recordábamos", "recordabais", "recordaban"]
+},
+"reír": {
+  "meaning": "笑",
+  "presente": ["río", "ríes", "ríe", "reímos", "reís", "ríen"],
+  "indefinido": ["reí", "reíste", "rio", "reímos", "reísteis", "rieron"],
+  "imperfecto": ["reía", "reías", "reía", "reíamos", "reíais", "reían"]
+},
+"romper": {
+  "meaning": "打破",
+  "presente": ["rompo", "rompes", "rompe", "rompemos", "rompéis", "rompen"],
+  "indefinido": ["rompí", "rompiste", "rompió", "rompimos", "rompisteis", "rompieron"],
+  "imperfecto": ["rompía", "rompías", "rompía", "rompíamos", "rompíais", "rompían"]
+},
+"salir": {
+  "meaning": "出去",
+  "presente": ["salgo", "sales", "sale", "salimos", "salís", "salen"],
+  "indefinido": ["salí", "saliste", "salió", "salimos", "salisteis", "salieron"],
+  "imperfecto": ["salía", "salías", "salía", "salíamos", "salíais", "salían"]
+},
+"saludar": {
+  "meaning": "打招呼",
+  "presente": ["saludo", "saludas", "saluda", "saludamos", "saludáis", "saludan"],
+  "indefinido": ["saludé", "saludaste", "saludó", "saludamos", "saludasteis", "saludaron"],
+  "imperfecto": ["saludaba", "saludabas", "saludaba", "saludábamos", "saludabais", "saludaban"]
+},
+"sentir": {
+  "meaning": "感觉",
+  "presente": ["siento", "sientes", "siente", "sentimos", "sentís", "sienten"],
+  "indefinido": ["sentí", "sentiste", "sintió", "sentimos", "sentisteis", "sintieron"],
+  "imperfecto": ["sentía", "sentías", "sentía", "sentíamos", "sentíais", "sentían"]
+},
+"ser": {
+  "meaning": "是（本质）",
+  "presente": ["soy", "eres", "es", "somos", "sois", "son"],
+  "indefinido": ["fui", "fuiste", "fue", "fuimos", "fuisteis", "fueron"],
+  "imperfecto": ["era", "eras", "era", "éramos", "erais", "eran"]
+},
+"tener": {
+  "meaning": "有",
+  "presente": ["tengo", "tienes", "tiene", "tenemos", "tenéis", "tienen"],
+  "indefinido": ["tuve", "tuviste", "tuvo", "tuvimos", "tuvisteis", "tuvieron"],
+  "imperfecto": ["tenía", "tenías", "tenía", "teníamos", "teníais", "tenían"]
+},
+"terminar": {
+  "meaning": "结束",
+  "presente": ["termino", "terminas", "termina", "terminamos", "termináis", "terminan"],
+  "indefinido": ["terminé", "terminaste", "terminó", "terminamos", "terminasteis", "terminaron"],
+  "imperfecto": ["terminaba", "terminabas", "terminaba", "terminábamos", "terminabais", "terminaban"]
+},
+"trabajar": {
+  "meaning": "工作",
+  "presente": ["trabajo", "trabajas", "trabaja", "trabajamos", "trabajáis", "trabajan"],
+  "indefinido": ["trabajé", "trabajaste", "trabajó", "trabajamos", "trabajasteis", "trabajaron"],
+  "imperfecto": ["trabajaba", "trabajabas", "trabajaba", "trabajábamos", "trabajabais", "trabajaban"]
+},
+"traer": {
+  "meaning": "带来",
+  "presente": ["traigo", "traes", "trae", "traemos", "traéis", "traen"],
+  "indefinido": ["traje", "trajiste", "trajo", "trajimos", "trajisteis", "trajeron"],
+  "imperfecto": ["traía", "traías", "traía", "traíamos", "traíais", "traían"]
+},
+"usar": {
+  "meaning": "使用",
+  "presente": ["uso", "usas", "usa", "usamos", "usáis", "usan"],
+  "indefinido": ["usé", "usaste", "usó", "usamos", "usasteis", "usaron"],
+  "imperfecto": ["usaba", "usabas", "usaba", "usábamos", "usabais", "usaban"]
+},
+"venir": {
+  "meaning": "来",
+  "presente": ["vengo", "vienes", "viene", "venimos", "venís", "vienen"],
+  "indefinido": ["vine", "viniste", "vino", "vinimos", "vinisteis", "vinieron"],
+  "imperfecto": ["venía", "venías", "venía", "veníamos", "veníais", "venían"]
+},
+"ver": {
+  "meaning": "看见",
+  "presente": ["veo", "ves", "ve", "vemos", "veis", "ven"],
+  "indefinido": ["vi", "viste", "vio", "vimos", "visteis", "vieron"],
+  "imperfecto": ["veía", "veías", "veía", "veíamos", "veíais", "veían"]
+},
+"viajar": {
+  "meaning": "旅行",
+  "presente": ["viajo", "viajas", "viaja", "viajamos", "viajáis", "viajan"],
+  "indefinido": ["viajé", "viajaste", "viajó", "viajamos", "viajasteis", "viajaron"],
+  "imperfecto": ["viajaba", "viajabas", "viajaba", "viajábamos", "viajabais", "viajaban"]
+},
+"vivir": {
+  "meaning": "生活 / 居住",
+  "presente": ["vivo", "vives", "vive", "vivimos", "vivís", "viven"],
+  "indefinido": ["viví", "viviste", "vivió", "vivimos", "vivisteis", "vivieron"],
+  "imperfecto": ["vivía", "vivías", "vivía", "vivíamos", "vivíais", "vivían"]
+},
+"volver": {
+  "meaning": "返回",
+  "presente": ["vuelvo", "vuelves", "vuelve", "volvemos", "volvéis", "vuelven"],
+  "indefinido": ["volví", "volviste", "volvió", "volvimos", "volvisteis", "volvieron"],
+  "imperfecto": ["volvía", "volvías", "volvía", "volvíamos", "volvíais", "volvían"]
+}
+}
+
+    let verboActual = "";
+    let personaActual = 0;
+
+    function nuevaPregunta() {
+      const tiempo = document.getElementById("tense").value;
+      const keys = Object.keys(verbos);
+      verboActual = keys[Math.floor(Math.random() * keys.length)];
+      personaActual = Math.floor(Math.random() * pronombres.length);
+      
+      document.getElementById("question").innerText = `${pronombres[personaActual]} (${verboActual}, ${tiempo})`;
+      document.getElementById("meaning").innerText = `中文意思：${verbos[verboActual].meaning}`;
+      document.getElementById("feedback").innerText = "";
+      document.getElementById("answer").value = "";
+      document.getElementById("answer").focus();
+    }
+
+    function checkAnswer() {
+      const tiempo = document.getElementById("tense").value;
+      const userAnswer = document.getElementById("answer").value.trim().toLowerCase();
+      const correcta = verbos[verboActual][tiempo][personaActual];
+      const feedback = document.getElementById("feedback");
+
+      if (userAnswer === correcta) {
+        feedback.innerText = "✅ 正确！";
+        feedback.style.color = "green";
+      } else {
+        feedback.innerText = `❌ 错误。正确答案是：${correcta}`;
+        feedback.style.color = "red";
+      }
+      setTimeout(nuevaPregunta, 1800);
+    }
+
+    window.onload = function() {
+      nuevaPregunta();
+      document.getElementById("tense").onchange = nuevaPregunta;
+    };
+  </script>
+</body>
+</html>
