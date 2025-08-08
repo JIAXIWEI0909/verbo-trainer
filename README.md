@@ -1,2 +1,0 @@
-# verbo-trainer
-Conjugación 
